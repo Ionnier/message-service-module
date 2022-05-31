@@ -37,6 +37,10 @@ app.post('/message', express.json(), async (req, res, next)=> {
         
         res.status(200).json({data})
 
+        if (user && user.isImportant){
+            await EventBus.sendEvent(process.env.EXCHANGE_NAME || 'asdf', EventBus.createEvent("IMPORTANT_MESSAGE", JSON.stringify(data.content)))
+        }
+
     } catch (e) {
         return next(e)
     }

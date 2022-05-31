@@ -3,6 +3,7 @@ const express = require('express')
 const Message = require('./database/Message')
 const jwt = require("jsonwebtoken")
 const app = express()
+const EventBus = require('./EventBus')
 
 app.get('/messages', async (req, res)=>{
     const messageClass = await Message()

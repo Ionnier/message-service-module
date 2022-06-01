@@ -4,6 +4,9 @@ const Message = require('./database/Message')
 const jwt = require("jsonwebtoken")
 const app = express()
 const EventBus = require('./EventBus')
+const cors = require('cors')
+
+app.use(cors())
 
 app.get('/message', async (req, res)=>{
     const messageClass = await Message()

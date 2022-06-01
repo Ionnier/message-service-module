@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken")
 const app = express()
 const EventBus = require('./EventBus')
 
-app.get('/messages', async (req, res)=>{
+app.get('/message', async (req, res)=>{
     const messageClass = await Message()
     const data = await messageClass.findAll()
     res.status(200).json({data})
@@ -33,11 +33,28 @@ app.post('/message', express.json(), async (req, res, next)=> {
         }
         
         const messageClass = await Message()
-        
-        const data = await messageClass.create({content: req.body.content, idUser, username})
+
+        let elements = await messageClass.findAll({
+            where: {
+                content: req.body.content
+            }
+        })
+
+        let hasVoiceOver
+
+        try{
+            hasVoiceOver = elements.filter((elem) => elem.hasVoiceOver).length>0
+        }
+        catch {
+            // pass
+        }
+    
+        console.log(hasVoiceOver)
+        const data = await messageClass.create({content: req.body.content, idUser, username, hasVoiceOver})
         
         try{
-            if (user && user.isImportant){
+            console.log(user)
+            if (user && user.isImportant == true){
                 await EventBus.sendEvent(process.env.EXCHANGE_NAME || 'asdf', EventBus.createEvent("IMPORTANT_MESSAGE", JSON.stringify(data.content)))
             }
         } catch (e) {
@@ -59,3 +76,37 @@ app.use('*', async (err, req, res, next)=>{
 
 const port = process.env.PORT || 3000
 app.listen(port, () => console.log(`Listening on ${port}.`))
+
+async function eventProcess(message) {
+    try{
+        const content = message.content.toString()
+        const obj = JSON.parse(content)
+        if (!obj || !obj.type){
+            return
+        }
+        if (obj.type == "CREATED"){
+            const messageClass = await Message()
+            console.log(obj)
+
+            const data = await messageClass.update(
+                {
+                    hasVoiceOver: true
+                },
+                {
+                where: {
+                    content: obj.data.slice(1, -1)
+                }
+            })
+
+        }
+
+    } catch(e){
+        console.log(e)
+    }
+}
+async function main(){
+    const instance = await EventBus.getInstance()
+    await instance.createExchange(process.env.EXCHANGE_NAME || 'asdf');
+    await instance.createQueue(process.env.EXCHANGE_NAME || 'asdf', '', eventProcess);
+  }
+  main()

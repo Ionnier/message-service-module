@@ -36,8 +36,6 @@ app.post('/message', express.json(), async (req, res, next)=> {
         
         const data = await messageClass.create({content: req.body.content, idUser, username})
         
-        res.status(200).json({data})
-        
         try{
             if (user && user.isImportant){
                 await EventBus.sendEvent(process.env.EXCHANGE_NAME || 'asdf', EventBus.createEvent("IMPORTANT_MESSAGE", JSON.stringify(data.content)))
@@ -46,7 +44,10 @@ app.post('/message', express.json(), async (req, res, next)=> {
             console.log(e)
         }
 
+        return res.status(200).json({data})
+        
     } catch (e) {
+        console.log(e)
         return next(e)
     }
     

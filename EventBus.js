@@ -51,7 +51,6 @@ const EventBus = (() => {
                 } else {
                     conn = await amqplib.connect(`amqp://${process.env.AMQP_SERVER || "localhost"}`);
                 }
-    
                 const ch = await conn.createChannel();
     
                 const exchange = await ch.assertExchange(exchangeName, 'fanout', {

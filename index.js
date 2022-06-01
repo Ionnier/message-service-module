@@ -23,8 +23,12 @@ app.post('/message', express.json(), async (req, res, next)=> {
         let token;
         let user
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-            token = req.headers.authorization.split(' ')[1];
-            user = jwt.verify(token, process.env.JWT_SECRET) 
+            try{
+                token = req.headers.authorization.split(' ')[1];
+                user = jwt.verify(token, process.env.JWT_SECRET) 
+            } catch (e){
+                // pass
+            }
         }
 
         let idUser
